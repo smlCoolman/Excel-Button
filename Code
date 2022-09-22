@@ -1,0 +1,54 @@
+Sub Button1_Click()
+Dim OutlookApp As Object
+Dim OutlookMail As Object
+Dim fileName As Variant
+Set OutlookApp = CreateObject("Outlook.Application")
+Set OutlookMail = OutlookApp.CreateItem(0)
+
+
+
+'This refreshes it and waits until it is finished
+For Each objConnection In ThisWorkbook.Connections
+    'Get current background-refresh value
+    bBackground = objConnection.OLEDBConnection.BackgroundQuery
+
+    'Temporarily disable background-refresh
+    objConnection.OLEDBConnection.BackgroundQuery = False
+
+    'Refresh this connection
+    objConnection.Refresh
+
+    'Set background-refresh value back to original value
+    objConnection.OLEDBConnection.BackgroundQuery = bBackground
+Next
+
+'This Sets the Date on a sheet known as Sheet1
+Range("'Sheet1'!C3").Value = Date
+
+'This Hides the tab before it saves. Tab is called RPuller and contains the button so after it saves a copy the end user won't see the button
+Sheets("RPuller").Visible = False
+
+'This Saves A copy and Leaves the Original Open
+'Sugested name in saveas
+Suggestname = "Sheet" & "_" & Format(Now(), "mm-dd-yy,hh_mm_ss") "
+
+'Opens dialog box to find where to save the file
+FolderName = Application.GetSaveAsFilename(InitialFileName:=Suggestname, fileFilter:="Excel Workbook (*.xlsm), *.xlsm")
+
+ThisFile = FolderName 'Use this is if you have a predetermined file path - & "_" & Format(Now(), "mm-dd-yy, hh.mm") & ".xlsm"
+ActiveWorkbook.SaveCopyAs fileName:=ThisFile
+
+'This Emails it to an Email List
+Email_List = "Joe@example.com"
+'Creates Email
+With OutlookMail
+    .to = Email_List
+    .Subject = "Sheet " & Date
+    .Body = "Text goes here"
+    .Attachments.Add ThisFile
+    .Display
+End With
+    
+'This Unhides it in the Original
+Sheets("RPuller").Visible = True
+End Sub
